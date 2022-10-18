@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Client, getClient, ResponseType } from "@tauri-apps/api/http";
+    // import { Client, getClient, ResponseType } from "@tauri-apps/api/http";
     import { onDestroy, onMount } from "svelte";
     import { IconMap, type IOpenWeather, type OpenWeatherLocations } from "../models/weather";
     import { config } from "../stores/store";
@@ -11,26 +11,22 @@
     let curWeather: IOpenWeather.List;
     let forecast: { [key: string]: IOpenWeather.List[] } = {};
 
-    let client: Client;
+    // let client: Client;
 
     const key = "e54ac00966ee06bcf68722c86925b326";
 
-    $: $config, client && getWeatherData();
+    $: $config, getWeatherData();
 
     async function getWeatherData() {
         try {
-            let r = await client.get<OpenWeatherLocations[]>(`https://api.openweathermap.org/geo/1.0/direct?q=${$config.weather_location}&limit=10&appId=${key}`, {
-                timeout: 30,
-                responseType: ResponseType.JSON
-            });
-            if (r.ok && r.data.length > 0) {
-                let area = r.data[0];
-                let r2 = await client.get<IOpenWeather.RootObject>(`https://api.openweathermap.org/data/2.5/forecast?appId=e54ac00966ee06bcf68722c86925b326&lat=${area.lat}&lon=${area.lon}&units=metric`, {
-                    timeout: 30,
-                    responseType: ResponseType.JSON
-                });
-                if (r2.ok && r2.data?.list?.length > 0) {
-                    weatherData = r2.data;
+            let r = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${$config.weather_location}&limit=10&appId=${key}`);
+            let data: OpenWeatherLocations[] = await r.json();
+            if (r.ok && data.length > 0) {
+                let area = data[0];
+                let r2 = await fetch(`https://api.openweathermap.org/data/2.5/forecast?appId=e54ac00966ee06bcf68722c86925b326&lat=${area.lat}&lon=${area.lon}&units=metric`);
+                let r2Data: IOpenWeather.RootObject = await r2.json();
+                if (r2.ok && r2Data?.list?.length > 0) {
+                    weatherData = r2Data;
 
                     let now = new Date();
                     let closest = weatherData.list[0];
@@ -62,7 +58,6 @@
     }
 
     onMount(async () => {
-        client = await getClient();
         getWeatherData();
         updateInterval = setInterval(() => {
             getWeatherData();

@@ -1,25 +1,18 @@
 <script lang="ts">
-    import { Client, getClient, ResponseType } from "@tauri-apps/api/http";
     import { onDestroy, onMount } from "svelte";
     import type { IQuotes } from "../models/quotes";
     import { config } from "../stores/store";
 
     let updateInterval: NodeJS.Timer;
     let quote: IQuotes.RandomQuote = null;
-    let client: Client;
 
-    $: $config, client && init();
+    $: $config, init();
 
     async function getData() {
         try {
-            let r = await client.get<IQuotes.RandomQuote>(`https://api.quotable.io/random${$config.quote_tags.length > 0 ? "?tags" + $config.quote_tags.join(",") : ""}`, {
-                responseType: ResponseType.JSON,
-                headers: {
-                    Authorization: `Bearer ${$config.spotify_key}`
-                }
-            });
+            let r = await fetch(`https://api.quotable.io/random${$config.quote_tags.length > 0 ? "?tags" + $config.quote_tags.join(",") : ""}`);
             if (r.ok) {
-                quote = r.data;
+                quote = await r.json();
             } else {
                 console.error(r);
             }
@@ -29,7 +22,6 @@
     }
 
     onMount(async () => {
-        client = await getClient();
         getData();
         init();
     });

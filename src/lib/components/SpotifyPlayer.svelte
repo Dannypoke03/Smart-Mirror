@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { Client, getClient, ResponseType } from "@tauri-apps/api/http";
     import { onDestroy, onMount } from "svelte";
     import type { ISpotify } from "../models/spotify";
     import { config } from "../stores/store";
@@ -11,20 +10,17 @@
     let curTime = new Date();
     let updateTime = new Date();
 
-    let client: Client;
-
-    $: $config, client && getData();
+    $: $config, getData();
 
     async function getData() {
         try {
-            let r = await client.get<ISpotify.NowPlaying>("https://api.spotify.com/v1/me/player/currently-playing", {
-                responseType: ResponseType.JSON,
+            let r = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
                 headers: {
                     Authorization: `Bearer ${$config.spotify_key}`
                 }
             });
             if (r.ok) {
-                spotifyData = r.data;
+                spotifyData = await r.json();
                 updateTime = new Date();
             } else {
                 console.error(r);
@@ -35,7 +31,6 @@
     }
 
     onMount(async () => {
-        client = await getClient();
         if (!$config.spotify_key) return;
         getData();
         updateInterval = setInterval(() => {

@@ -3,7 +3,7 @@
     import Web from "./lib/Web.svelte";
 </script>
 
-{#if window.__TAURI_IPC__}
+{#if location.toString().includes("mirror")}
     <TauriMain />
 {:else}
     <Web />

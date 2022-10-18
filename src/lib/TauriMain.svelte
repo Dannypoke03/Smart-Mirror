@@ -1,5 +1,4 @@
 <script>
-    import { invoke } from "@tauri-apps/api/tauri";
     import { onDestroy } from "svelte";
     import Quote from "./components/Quote.svelte";
     import SpotifyNewReleases from "./components/SpotifyNewReleases.svelte";
@@ -9,25 +8,21 @@
     import { config } from "./stores/store";
 
     const updateInterval = setInterval(() => {
-        invoke("get_config")
-            .then(cfg => {
-                if (JSON.stringify(cfg) !== JSON.stringify($config)) {
-                    $config = cfg;
+        fetch("/api/config")
+            .then(r => r.json())
+            .then(data => {
+                if (JSON.stringify(data) !== JSON.stringify($config)) {
+                    $config = data;
                 }
             })
-            .catch(e => console.error(e));
+            .catch(e => {
+                console.error(e);
+            });
     }, 1000);
 
     onDestroy(() => {
         clearInterval(updateInterval);
     });
-
-    $: $config, updateConfig();
-
-    function updateConfig() {
-        if (!$config) return;
-        invoke("update_config", { updatedCfg: $config }).catch(e => console.error(e));
-    }
 </script>
 
 <link href="/fontawesome/css/fontawesome.css" rel="stylesheet" />
