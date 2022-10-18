@@ -16,6 +16,7 @@ fn main() {
 
     tauri::Builder::default()
         .setup(|_app| {
+            let web_path = _app.path_resolver().resolve_resource("../dist").unwrap();
             tauri::async_runtime::spawn(
                 rocket::build()
                     .mount(
@@ -27,7 +28,7 @@ fn main() {
                             spotify_callback
                         ],
                     )
-                    .mount("/", FileServer::from("../dist"))
+                    .mount("/", FileServer::from(web_path))
                     .launch(),
             );
             tauri::async_runtime::spawn(async {
