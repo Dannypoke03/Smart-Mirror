@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, env};
 use tokio::time::Duration;
 
 use crate::config_handler::{
@@ -44,7 +44,10 @@ pub async fn spotify_callback(code: Option<&str>, error: Option<&str>) -> Redire
         let mut params = HashMap::new();
         params.insert("code", code.unwrap());
         params.insert("grant_type", "authorization_code");
-        params.insert("redirect_uri", "http://localhost:8000/api/spotify-callback");
+        let base = env::var("SPOTIFY_BASE_URL")
+            .unwrap_or_else(|_| "http://localhost/api/spotify-callback".into());
+        println!("Callback: {}", base);
+        params.insert("redirect_uri", &base);
 
         let client = reqwest::Client::new();
         let resp = client
