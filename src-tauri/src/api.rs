@@ -19,20 +19,22 @@ pub fn api_update_config(updated_cfg: Json<MyConfig>) -> Json<MyConfig> {
 
 #[rocket::get("/spotify-login")]
 pub fn spotify_login() -> Redirect {
-    // let main = .to_owned();
-    // let callback_url = uri!(spotify_callback).to_string().to_owned();
-    // let url = main + &callback_url;
-    // let test = &url as &str;
-    Redirect::to(uri!("https://accounts.spotify.com/authorize?response_type=code&client_id=155229d5d7744f1eb57f6ca7e931debb&scope=user-read-currently-playing%20user-follow-read&redirect_uri=http://localhost:8000/api/spotify-callback"))
+    let cfg = load_app_config().unwrap();
+    let base = env::var("SPOTIFY_BASE_URL")
+        .unwrap_or_else(|_| "http://localhost/api/spotify-callback".into());
+    let link = format!(
+        "https://accounts.spotify.com/authorize?response_type=code&client_id={}&scope=user-read-currently-playing%20user-follow-read&redirect_uri={}",
+        cfg.spotify_id,
+        base
+    ).to_string();
+    Redirect::to(link)
 }
 
 #[derive(Deserialize, Debug, Clone)]
 struct SpotifyResponse {
     access_token: String,
-    // token_type: String,
     expires_in: i32,
     refresh_token: Option<String>,
-    // scope: String,
 }
 
 static mut SPOTIFY_TASK: Option<tokio::task::JoinHandle<()>> = None;
